@@ -1,5 +1,5 @@
-## onthego-server
-# Start server (dev, nodemon installed) 
+# onthego-server
+## Start server (dev, nodemon installed) 
 ```
 nodemon server.js
 ```
