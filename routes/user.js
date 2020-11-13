@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
               "select [name], isAdmin, birthday, [address] from [User] where id = @UID"
             );
           res.send({ ...userInfo.recordset[0], token });
-        } else throw new Error("Không thể tạo mới người dùng");
+        } else throw new Error({ message: "Không thể tạo mới người dùng" });
       } else
         res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
     }
@@ -47,14 +47,13 @@ router.post("/login", async (req, res) => {
 
 router.post("/signup", async (req, res) => {
   try {
-    console.log(req);
     let pool = await sql.connect();
 
     // check unique email
     let mailCheck = await pool
       .request()
       .input("email", sql.VarChar, req.body.email)
-      .query("select * from [User] where email = @email");
+      .query("select id from [User] where email = @email");
     // console.log(mailCheck);
 
     if (mailCheck.recordset.length == 0) {
@@ -66,7 +65,7 @@ router.post("/signup", async (req, res) => {
         .input("name", sql.NVarChar, req.body.name)
         .input(
           "birthday",
-          sql.Date,
+          sql.DateTimeOffset,
           req.body.birthday != null ? new Date(req.body.birthday) : null
         )
         .input("address", sql.NVarChar(50), req.body.address)
@@ -88,14 +87,98 @@ router.post("/signup", async (req, res) => {
             "insert into [User_Token] (userId,token,createdAt) values (@UID, @token, CURRENT_TIMESTAMP)"
           );
         if (insertToken.rowsAffected[0] > 0) res.status(201).send({ token });
-      }
+        else throw new Error({ message: "Lỗi tạo mới token" });
+      } else throw new Error({ message: "Lỗi tạo mới người dùng" });
     } else {
       res.status(403).send({ error: "Email đã tồn tại" });
     }
   } catch (err) {
     // ... error checks
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: error.originalError.info.message });
     console.log(err);
+  }
+});
+
+router.get("/logout", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let logOut = await pool
+      .request()
+      .input("token", sql.VarChar(200), req.token)
+      .query("delete from [User_Token] where token = @token");
+    if (logOut.rowsAffected[0] > 0)
+      res.send({ message: "Đăng xuất thành công!" });
+    else throw new Error({ message: "Lỗi token" });
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+    console.log(error);
+  }
+});
+
+router.post("/edit", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+
+    // check unique email
+    let mailCheck = await pool
+      .request()
+      .input("email", sql.VarChar, req.body.email)
+      .query("select id from [User] where email = @email");
+    if (mailCheck.rowsAffected[0] > 0 && mailCheck.recordset[0].id != req.uid) {
+      res.status(403).send({
+        error: "Email đã có người sử dụng, vui lòng dùng email khác!",
+      });
+    } else {
+      let editUser = await pool
+        .request()
+        .input("name", sql.NVarChar(100), req.body.name)
+        .input("email", sql.VarChar(100), req.body.email)
+        .input(
+          "birthday",
+          sql.DateTimeOffset,
+          req.body.birthday != null ? new Date(req.body.birthday) : null
+        )
+        .input("address", sql.NVarChar(50), req.body.address)
+        .input("UID", sql.Int, req.uid)
+        .query(
+          "update [User] set [name] = @name, email = @email, birthday = @birthday, [address] = @address where id = @UID"
+        );
+      if (editUser.rowsAffected[0] > 0)
+        res.send({ message: "Cập nhật thành công!" });
+      else throw new Error({ message: "Không tìm thấy người dùng" });
+    }
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+    console.log(error);
+  }
+});
+router.post("/edit/pwd", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let encryptedPwd = await pool
+      .request()
+      .input("UID", sql.Int, req.uid)
+      .query("select [password] from [User] where id = @UID");
+    if (encryptedPwd.rowsAffected[0] > 0) {
+      let isPwdMatch = await bcrypt.compare(
+        req.body.oldPwd,
+        encryptedPwd.recordset[0].password
+      );
+      if (isPwdMatch) {
+        let hashedPwd = await bcrypt.hash(req.body.newPwd, 10);
+        let changePwd = await pool
+          .request()
+          .input("newPwd", sql.VarChar(100), hashedPwd)
+          .input("UID", sql.Int, req.uid)
+          .query("update [User] set [password] = @newPwd where id = @UID");
+        if (changePwd.rowsAffected[0] > 0)
+          res.send({ message: "Đổi mật khẩu thành công" });
+        else throw new Error({ message: "Không thể đổi mật khẩu" });
+      } else res.status(401).send({ error: "Sai mật khẩu cũ" });
+    } else throw new Error({ message: "Không tìm thấy người dùng" });
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+    console.log(error);
   }
 });
 
@@ -110,7 +193,7 @@ router.get("/trip", auth, async (req, res) => {
       );
     res.send(userTrips.recordset);
   } catch (err) {
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: error.message });
     console.log(err);
   }
 });

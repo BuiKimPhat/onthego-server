@@ -22,7 +22,7 @@ router.get("/", auth, async (req, res) => {
       res.send(fetchDestinations.recordset);
     }
   } catch (err) {
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: err.message });
     console.log(err);
   }
 });
@@ -37,10 +37,10 @@ router.get("/trip/:tripID", auth, async (req, res) => {
           "select id, [name], startTime, finishTime from Destination join Trip_Destination on Destination.id = Trip_Destination.destinationId where Trip_Destination.tripId = @tripId"
         );
       res.send(tripDestinations.recordset);
-    } else throw new Error("Không có tripID");
+    } else throw new Error({ message: "Không tìm thấy chuyến đi" });
   } catch (err) {
     console.log(err);
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: err.message });
   }
 });
 
