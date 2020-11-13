@@ -3,6 +3,7 @@ const app = express();
 const sql = require("mssql");
 require("dotenv").config();
 const port = 6996;
+app.use(express.json());
 
 // db credentials
 const dbConfig = {

@@ -22,12 +22,12 @@ router.get("/", auth, async (req, res) => {
       res.send(fetchDestinations.recordset);
     }
   } catch (err) {
+    res.status(400).send({ error: err });
     console.log(err);
   }
 });
 router.get("/trip/:tripID", auth, async (req, res) => {
   try {
-    console.log(req.params);
     let pool = await sql.connect();
     if (req.params.tripID) {
       let tripDestinations = await pool
