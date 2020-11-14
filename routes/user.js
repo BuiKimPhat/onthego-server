@@ -3,6 +3,7 @@ const router = require("express").Router();
 const bcrypt = require("bcrypt");
 const genToken = require("../middlewares/genToken");
 const auth = require("../middlewares/auth");
+const { request } = require("express");
 
 router.post("/login", async (req, res) => {
   try {
@@ -37,7 +38,7 @@ router.post("/login", async (req, res) => {
           res.send({ ...userInfo.recordset[0], token });
         } else throw new Error("Không thể tạo mới người dùng");
       } else
-        res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+          res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
     }
   } catch (err) {
     res.status(400).send({ error: err });
@@ -114,5 +115,47 @@ router.get("/trip", auth, async (req, res) => {
     console.log(err);
   }
 });
+
+// An , lấy số lượng user
+router.get("/admin_User",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let listUser = await pool
+      .request()
+      .input("UID",sql.Int,req.uid)
+      .query(
+        "select id ,name, email from [User]"
+      );
+    res.send(listUser.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+//An , lấy thông tin user trừ password 
+router.get("/getUserInfor",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let user = await pool
+      .request()
+      .input("id",sql.Int,req.id)
+      .query(
+        "select  name , email , isAdmin , birthday , address , token from [User] where id = @id" 
+      );
+    res.send(user.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+// An , xóa user 
+router.delete("/deleteUser",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let delUser = await pool
+    .request()
+    .
+  }
+})
 
 module.exports = router;
