@@ -28,11 +28,13 @@ sql.connect({
   }
 });
 
-//router
+//routers
 const userRouter = require("./routes/user");
 app.use("/api/user", userRouter);
 const desitnationRouter = require("./routes/destination");
 app.use("/api/destination", desitnationRouter);
+const tripRouter = require("./routes/trip");
+app.use("/api/trip", tripRouter);
 
 // listen
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

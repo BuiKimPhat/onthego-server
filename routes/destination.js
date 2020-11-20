@@ -10,14 +10,14 @@ router.get("/", auth, async (req, res) => {
         .request()
         .input("category", sql.VarChar, req.query.category)
         .query(
-          "select id, [name], address, phone, description, city from Destination where category = @category"
+          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination where category = @category order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     } else {
       let fetchDestinations = await pool
         .request()
         .query(
-          "select id, [name], address, phone, description, city from Destination"
+          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     }
@@ -37,11 +37,50 @@ router.get("/trip/:tripID", auth, async (req, res) => {
           "select id, [name], startTime, finishTime from Destination join Trip_Destination on Destination.id = Trip_Destination.destinationId where Trip_Destination.tripId = @tripId"
         );
       res.send(tripDestinations.recordset);
-    } else throw new Error({ message: "Không tìm thấy chuyến đi" });
+    } else throw new Error("Không tìm thấy chuyến đi");
   } catch (err) {
     console.log(err);
     res.status(400).send({ error: err.message });
   }
 });
-
+router.post("/trip/add", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let checkEditRight = await pool
+      .request()
+      .input("UID", sql.Int, req.uid)
+      .input("tripID", sql.Int, req.body.tripId)
+      .query("select id from Trip where id = @tripID and ownerId = @UID");
+    if (checkEditRight.rowsAffected[0] <= 0)
+      res
+        .status(403)
+        .send({ error: "Bạn không có quyền chỉnh sửa chuyến đi này" });
+    else {
+      let checkDuplicate = await pool
+        .request()
+        .input("tripID", sql.Int, req.body.tripId)
+        .input("destinationID", sql.Int, req.body.destinationId)
+        .query(
+          "select * from Trip_Destination where tripId = @tripID and destinationId = @destinationID"
+        );
+      if (checkDuplicate.rowsAffected[0] > 0)
+        throw new Error("Điểm đến đã tồn tại trong chuyến đi");
+      else {
+        let addTripDestination = await pool
+          .request()
+          .input("tripID", sql.Int, req.body.tripId)
+          .input("destinationID", sql.Int, req.body.destinationId)
+          .query(
+            "insert into Trip_Destination (tripId, destinationId) values (@tripID, @destinationID)"
+          );
+        if (addTripDestination.rowsAffected[0] > 0)
+          res.send({ message: "Đã thêm điểm đến vào chuyến đi" });
+        else throw new Error("Không thể thêm điểm đến vào chuyến đi");
+      }
+    }
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  }
+});
 module.exports = router;

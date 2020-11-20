@@ -35,12 +35,12 @@ router.post("/login", async (req, res) => {
               "select [name], isAdmin, birthday, [address] from [User] where id = @UID"
             );
           res.send({ ...userInfo.recordset[0], token });
-        } else throw new Error({ message: "Không thể tạo mới người dùng" });
+        } else throw new Error("Không thể tạo mới người dùng");
       } else
         res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
     }
   } catch (err) {
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: err.message });
     console.log(err);
   }
 });
@@ -87,14 +87,14 @@ router.post("/signup", async (req, res) => {
             "insert into [User_Token] (userId,token,createdAt) values (@UID, @token, CURRENT_TIMESTAMP)"
           );
         if (insertToken.rowsAffected[0] > 0) res.status(201).send({ token });
-        else throw new Error({ message: "Lỗi tạo mới token" });
-      } else throw new Error({ message: "Lỗi tạo mới người dùng" });
+        else throw new Error("Lỗi tạo mới token");
+      } else throw new Error("Lỗi tạo mới người dùng");
     } else {
       res.status(403).send({ error: "Email đã tồn tại" });
     }
   } catch (err) {
     // ... error checks
-    res.status(400).send({ error: error.originalError.info.message });
+    res.status(400).send({ error: err.message });
     console.log(err);
   }
 });
@@ -108,7 +108,7 @@ router.get("/logout", auth, async (req, res) => {
       .query("delete from [User_Token] where token = @token");
     if (logOut.rowsAffected[0] > 0)
       res.send({ message: "Đăng xuất thành công!" });
-    else throw new Error({ message: "Lỗi token" });
+    else throw new Error("Lỗi token");
   } catch (error) {
     res.status(400).send({ error: error.message });
     console.log(error);
@@ -145,7 +145,7 @@ router.post("/edit", auth, async (req, res) => {
         );
       if (editUser.rowsAffected[0] > 0)
         res.send({ message: "Cập nhật thành công!" });
-      else throw new Error({ message: "Không tìm thấy người dùng" });
+      else throw new Error("Không tìm thấy người dùng");
     }
   } catch (error) {
     res.status(400).send({ error: error.message });
@@ -173,28 +173,12 @@ router.post("/edit/pwd", auth, async (req, res) => {
           .query("update [User] set [password] = @newPwd where id = @UID");
         if (changePwd.rowsAffected[0] > 0)
           res.send({ message: "Đổi mật khẩu thành công" });
-        else throw new Error({ message: "Không thể đổi mật khẩu" });
+        else throw new Error("Không thể đổi mật khẩu");
       } else res.status(401).send({ error: "Sai mật khẩu cũ" });
-    } else throw new Error({ message: "Không tìm thấy người dùng" });
+    } else throw new Error("Không tìm thấy người dùng");
   } catch (error) {
     res.status(400).send({ error: error.message });
     console.log(error);
-  }
-});
-
-router.get("/trip", auth, async (req, res) => {
-  try {
-    let pool = await sql.connect();
-    let userTrips = await pool
-      .request()
-      .input("UID", sql.Int, req.uid)
-      .query(
-        "select Trip.id, Trip.[name], [User].[name] as [owner], Trip.createdAt from Trip join (select tripId from User_Trip where userId = @UID) as cUser on Trip.id = cUser.tripId join [User] on Trip.ownerId = [User].id"
-      );
-    res.send(userTrips.recordset);
-  } catch (err) {
-    res.status(400).send({ error: error.message });
-    console.log(err);
   }
 });
 
