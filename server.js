@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const sql = require("mssql");
 require("dotenv").config();
-const port = 6996;
+const port = process.env.API_PORT;
 app.use(express.json());
 
 // db credentials
