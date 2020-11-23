@@ -149,13 +149,20 @@ router.get("/getUserInfor",auth,async(req,res)=>{
   }
 });
 // An , xóa user 
-router.delete("/deleteUser",auth,async(req,res)=>{
+router.get("/deleteUser/:id",auth,async(req,res)=>{
   try{
     let pool = await sql.connect();
-    let delUser = await pool
+    let result = await pool
     .request()
-    .
+    .input("id",sql.Int,req.id)
+    .query(
+      "delete from [User_Trip] where userid = @id delete form [User] where id = @id"
+    );
+    res.send("{Delete success}");
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
   }
-})
+});
 
 module.exports = router;
