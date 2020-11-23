@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const sql = require("mssql");
 require("dotenv").config();
-const port = 6996;
+const port = process.env.API_PORT;
 app.use(express.json());
 
 // db credentials
@@ -28,11 +28,13 @@ sql.connect({
   }
 });
 
-//router
+//routers
 const userRouter = require("./routes/user");
 app.use("/api/user", userRouter);
 const desitnationRouter = require("./routes/destination");
 app.use("/api/destination", desitnationRouter);
+const tripRouter = require("./routes/trip");
+app.use("/api/trip", tripRouter);
 
 // listen
 app.listen(port, () => console.log(`Server is listening on port ${port}`));
