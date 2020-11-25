@@ -10,14 +10,14 @@ router.get("/", auth, async (req, res) => {
         .request()
         .input("category", sql.VarChar, req.query.category)
         .query(
-          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination where category = @category order by rating desc"
+          "select id, [name], address, phone, description, rating, city, position from Destination where category = @category order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     } else {
       let fetchDestinations = await pool
         .request()
         .query(
-          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination order by rating desc"
+          "select id, [name], address, phone, description, rating, city, position from Destination order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     }
@@ -83,4 +83,20 @@ router.post("/trip/add", auth, async (req, res) => {
     console.log(err);
   }
 });
+//An
+router.get("/getDestinationCount",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let count = await pool
+    .request()
+    .query(
+      "select COUNT (*) as numOfDestinations from [Destination];"
+    );
+    res.send(count.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+})
+
 module.exports = router;

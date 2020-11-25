@@ -232,5 +232,20 @@ router.post("/delete", auth, async (req, res) => {
     console.log(err);
   }
 });
+//An
+router.get("/getTripCount",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let count = await pool
+    .request()
+    .query(
+      "select COUNT (*) as numOfTrips from [Trip];"
+    );
+    res.send(count.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+})
 
 module.exports = router;
