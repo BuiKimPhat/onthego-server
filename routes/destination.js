@@ -10,14 +10,14 @@ router.get("/", auth, async (req, res) => {
         .request()
         .input("category", sql.VarChar, req.query.category)
         .query(
-          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination where category = @category order by rating desc"
+          "select id, [name], address, phone, description, rating, city, position from Destination where category = @category order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     } else {
       let fetchDestinations = await pool
         .request()
         .query(
-          "select id, [name], address, phone, description, inCost, avgCost, rating, city, position from Destination order by rating desc"
+          "select id, [name], address, phone, description, rating, city, position from Destination order by rating desc"
         );
       res.send(fetchDestinations.recordset);
     }
