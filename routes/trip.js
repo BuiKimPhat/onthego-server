@@ -55,7 +55,7 @@ router.post("/add", auth, async (req, res) => {
         .input("UID", sql.Int, req.uid)
         .input("name", sql.NVarChar(100), req.body.name)
         .query(
-          "insert into Trip (ownerId, [name], createdAt) values (@UID, @name, CURRENT_TIMESTAMP)"
+          "insert into Trip (ownerId, [name]) values (@UID, @name)"
         );
       if (newTrip.rowsAffected[0] > 0) {
         // insert trip destinations
