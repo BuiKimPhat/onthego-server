@@ -1,3 +1,4 @@
+const axios = require("axios");
 const sql = require("mssql");
 const router = require("express").Router();
 const auth = require("../middlewares/auth");
@@ -90,14 +91,13 @@ router.get("/weather", auth, async (req, res) => {
     // .then(apiRes => {
     //   res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
     // })
-    const Http = new XMLHttpRequest();
-    const url=`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`;
-    Http.open("GET", url);
-    Http.send();
-    Http.onreadystatechange = (e) => {
-      var apiRes = Http.responseText;
+    axios.get(`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
+    .then(apiRes => {
       res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
-    }
+    })
+    .catch(error => {
+      throw error;
+    });
   } catch (err){
     res.status(400).send({error: err.message});
     console.log(err);
