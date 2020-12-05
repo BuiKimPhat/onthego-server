@@ -86,14 +86,9 @@ router.post("/trip/add", auth, async (req, res) => {
 });
 router.get("/weather", auth, async (req, res) => {
   try {
-    // fetch(`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
-    // .then(data => data.json())
-    // .then(apiRes => {
-    //   res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
-    // })
-    axios.get(`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
+    axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
     .then(apiRes => {
-      res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
+      res.send({temp: apiRes.data.main.temp, description: apiRes.data.weather[0].description, icon: apiRes.data.weather[0].icon});
     })
     .catch(error => {
       throw error;
