@@ -85,11 +85,19 @@ router.post("/trip/add", auth, async (req, res) => {
 });
 router.get("/weather", auth, async (req, res) => {
   try {
-    fetch(`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
-    .then(data => data.json())
-    .then(apiRes => {
+    // fetch(`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
+    // .then(data => data.json())
+    // .then(apiRes => {
+    //   res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
+    // })
+    const Http = new XMLHttpRequest();
+    const url=`api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`;
+    Http.open("GET", url);
+    Http.send();
+    Http.onreadystatechange = (e) => {
+      var apiRes = Http.responseText;
       res.send({temp: apiRes.main.temp, description: apiRes.weather[0].description, icon: apiRes.weather[0].icon});
-    })
+    }
   } catch (err){
     res.status(400).send({error: err.message});
     console.log(err);
