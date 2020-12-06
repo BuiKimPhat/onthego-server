@@ -133,14 +133,14 @@ router.get("/admin_User",auth,async(req,res)=>{
   }
 });
 //An , lấy thông tin user trừ password 
-router.get("/getUserInfor",auth,async(req,res)=>{
+router.get("/getUserInfor/:id",auth,async(req,res)=>{
   try{
     let pool = await sql.connect();
     let user = await pool
       .request()
-      .input("id",sql.Int,req.id)
+      .input("id",sql.Int,req.params.id)
       .query(
-        "select  name , email , isAdmin , birthday , address , token from [User] where id = @id" 
+        "select name , email , isAdmin , birthday , address from [User] where id = @id" 
       );
     res.send(user.recordset);
   }catch(err){
@@ -149,17 +149,39 @@ router.get("/getUserInfor",auth,async(req,res)=>{
   }
 });
 // An , xóa user 
-router.get("/deleteUser/:id",auth,async(req,res)=>{
+router.post("/deleteUser/:id",auth,async(req,res)=>{
   try{
     let pool = await sql.connect();
     let result = await pool
     .request()
-    .input("id",sql.Int,req.id)
+    .input("id",sql.Int,req.params.id)
     .query(
-      "delete from [User_Trip] where userid = @id delete form [User] where id = @id"
+      "select tripId from UserTrip where userId= @id"
     );
-    if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa chuyến đi khỏi danh sách");
-    else res.send({message : "Delete Success"});
+    if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng!");
+    else {
+      await pool
+         .request()
+         .input("tripID", sql.Int, req.body.tripId)
+         .query("delete from Trip_Destination where tripId = @tripID");
+         let deleteTrip = await pool
+            .request()
+            .input("id",sql.Int,req.params.id)
+            .input("tripID", sql.Int, req.body.tripId)
+            .query("delete from Trip where id = @tripID and ownerId = @id");
+        if(deleteTrip.rowsAffected[0]<0) throw new Error ("Không thể xóa người dùng!");
+        else{
+          await pool
+          .request()
+          .query("delete from User_Token where userId = @id");
+          let deleteUser = await pool
+            .request()
+            .input("id",sql.Int,req.params.id)
+            .query("delete from [User] where id =@id");
+          if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
+          else throw new Error ("Không thể xóa người dùng!");
+        }
+    };
   }catch(err){
     res.status(400).send({ error: err });
     console.log(err);
@@ -178,7 +200,47 @@ router.get("/getUserCount",auth,async(req,res)=>{
     res.status(400).send({ error: err });
     console.log(err);
   }
-})
+});
 
+router.post("/login_fake", async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let checkCreds = await pool
+      .request()
+      .input("email", sql.VarChar(100), req.body.email)
+      .query("select id from [User] where email = @email");
+    if (checkCreds.recordset.length == 0) {
+      res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+    } else {
+      let isIdMatch = await bcrypt.compare(
+        req.body.id,
+        checkCreds.recordset[0].id
+      );
+      if (isIdMatch) {
+        let token = genToken(checkCreds.recordset[0].id);
+        let insertToken = await pool
+          .request()
+          .input("UID", sql.Int, checkCreds.recordset[0].id)
+          .input("token", sql.VarChar(200), token)
+          .query(
+            "insert into [User_Token](userId, token, createdAt) values (@UID, @token, CURRENT_TIMESTAMP)"
+          );
+        if (insertToken.rowsAffected[0] > 0) {
+          let userInfo = await pool
+            .request()
+            .input("UID", sql.Int, checkCreds.recordset[0].id)
+            .query(
+              "select [name], isAdmin, birthday, [address] from [User] where id = @UID"
+            );
+          res.send({ ...userInfo.recordset[0], token });
+        } else throw new Error("Không thể tạo mới người dùng");
+      } else
+          res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+    }
+  } catch (err) {
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
 module.exports = router;
 
