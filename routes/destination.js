@@ -1,3 +1,4 @@
+const axios = require("axios");
 const sql = require("mssql");
 const router = require("express").Router();
 const auth = require("../middlewares/auth");
@@ -10,14 +11,22 @@ router.get("/", auth, async (req, res) => {
         .request()
         .input("category", sql.VarChar, req.query.category)
         .query(
+<<<<<<< HEAD
           "select id, [name], address, phone, description, rating, city, position from Destination where category = @category order by rating desc"
+=======
+          "select id, [name], address, description, rating, rateNum, latitude, longitude from Destination where category = @category order by rateNum desc"
+>>>>>>> master
         );
       res.send(fetchDestinations.recordset);
     } else {
       let fetchDestinations = await pool
         .request()
         .query(
+<<<<<<< HEAD
           "select id, [name], address, phone, description, rating, city, position from Destination order by rating desc"
+=======
+          "select id, [name], address, description, rating, rateNum, latitude, longitude from Destination order by rateNum desc"
+>>>>>>> master
         );
       res.send(fetchDestinations.recordset);
     }
@@ -34,7 +43,7 @@ router.get("/trip/:tripID", auth, async (req, res) => {
         .request()
         .input("tripId", sql.Int, req.params.tripID)
         .query(
-          "select id, [name], startTime, finishTime from Destination join Trip_Destination on Destination.id = Trip_Destination.destinationId where Trip_Destination.tripId = @tripId"
+          "select id, [name], address, description, rating, rateNum, latitude, longitude, startTime, finishTime from Destination join Trip_Destination on Destination.id = Trip_Destination.destinationId where Trip_Destination.tripId = @tripId"
         );
       res.send(tripDestinations.recordset);
     } else throw new Error("Không tìm thấy chuyến đi");
@@ -83,6 +92,7 @@ router.post("/trip/add", auth, async (req, res) => {
     console.log(err);
   }
 });
+<<<<<<< HEAD
 //An
 router.get("/getDestinationCount",auth,async(req,res)=>{
   try{
@@ -171,4 +181,20 @@ router.post("/add",auth,async(req,res)=>{
     console.log(err);
   } 
 })
+=======
+router.get("/weather", auth, async (req, res) => {
+  try {
+    axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
+    .then(apiRes => {
+      res.send({temp: apiRes.data.main.temp, description: apiRes.data.weather[0].description, icon: apiRes.data.weather[0].icon});
+    })
+    .catch(error => {
+      throw error;
+    });
+  } catch (err){
+    res.status(400).send({error: err.message});
+    console.log(err);
+  }
+});
+>>>>>>> master
 module.exports = router;
