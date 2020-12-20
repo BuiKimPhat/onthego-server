@@ -114,4 +114,20 @@ router.get("/list", auth, async (req, res) => {
   }
 });
 
+router.get("/getDes/:id",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let user = await pool
+      .request()
+      .input("id",sql.Int,req.params.id)
+      .query(
+        "select id, [name], address, description, category, rating, rateNum, latitude , longitude from Destination where id = @id" 
+      );
+    res.send(user.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+
 module.exports = router;

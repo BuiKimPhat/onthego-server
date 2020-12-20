@@ -202,45 +202,45 @@ router.get("/getUserCount",auth,async(req,res)=>{
   }
 });
 
-router.post("/login_fake", async (req, res) => {
-  try {
-    let pool = await sql.connect();
-    let checkCreds = await pool
-      .request()
-      .input("email", sql.VarChar(100), req.body.email)
-      .query("select id from [User] where email = @email");
-    if (checkCreds.recordset.length == 0) {
-      res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
-    } else {
-      let isIdMatch = await bcrypt.compare(
-        req.body.id,
-        checkCreds.recordset[0].id
-      );
-      if (isIdMatch) {
-        let token = genToken(checkCreds.recordset[0].id);
-        let insertToken = await pool
-          .request()
-          .input("UID", sql.Int, checkCreds.recordset[0].id)
-          .input("token", sql.VarChar(200), token)
-          .query(
-            "insert into [User_Token](userId, token, createdAt) values (@UID, @token, CURRENT_TIMESTAMP)"
-          );
-        if (insertToken.rowsAffected[0] > 0) {
-          let userInfo = await pool
-            .request()
-            .input("UID", sql.Int, checkCreds.recordset[0].id)
-            .query(
-              "select [name], isAdmin, birthday, [address] from [User] where id = @UID"
-            );
-          res.send({ ...userInfo.recordset[0], token });
-        } else throw new Error("Không thể tạo mới người dùng");
-      } else
-          res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
-    }
-  } catch (err) {
-    res.status(400).send({ error: err });
-    console.log(err);
-  }
-});
+// router.post("/login_fake", async (req, res) => {
+//   try {
+//     let pool = await sql.connect();
+//     let checkCreds = await pool
+//       .request()
+//       .input("email", sql.VarChar(100), req.body.email)
+//       .query("select id from [User] where email = @email");
+//     if (checkCreds.recordset.length == 0) {
+//       res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+//     } else {
+//       let isIdMatch = await bcrypt.compare(
+//         req.body.id,
+//         checkCreds.recordset[0].id
+//       );
+//       if (isIdMatch) {
+//         let token = genToken(checkCreds.recordset[0].id);
+//         let insertToken = await pool
+//           .request()
+//           .input("UID", sql.Int, checkCreds.recordset[0].id)
+//           .input("token", sql.VarChar(200), token)
+//           .query(
+//             "insert into [User_Token](userId, token, createdAt) values (@UID, @token, CURRENT_TIMESTAMP)"
+//           );
+//         if (insertToken.rowsAffected[0] > 0) {
+//           let userInfo = await pool
+//             .request()
+//             .input("UID", sql.Int, checkCreds.recordset[0].id)
+//             .query(
+//               "select [name], isAdmin, birthday, [address] from [User] where id = @UID"
+//             );
+//           res.send({ ...userInfo.recordset[0], token });
+//         } else throw new Error("Không thể tạo mới người dùng");
+//       } else
+//           res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+//     }
+//   } catch (err) {
+//     res.status(400).send({ error: err });
+//     console.log(err);
+//   }
+// });
 module.exports = router;
 
