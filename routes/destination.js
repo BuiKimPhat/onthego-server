@@ -11,22 +11,14 @@ router.get("/", auth, async (req, res) => {
         .request()
         .input("category", sql.VarChar, req.query.category)
         .query(
-<<<<<<< HEAD
-          "select id, [name], address, phone, description, rating, city, position from Destination where category = @category order by rating desc"
-=======
           "select id, [name], address, description, rating, rateNum, latitude, longitude from Destination where category = @category order by rateNum desc"
->>>>>>> master
         );
       res.send(fetchDestinations.recordset);
     } else {
       let fetchDestinations = await pool
         .request()
         .query(
-<<<<<<< HEAD
-          "select id, [name], address, phone, description, rating, city, position from Destination order by rating desc"
-=======
           "select id, [name], address, description, rating, rateNum, latitude, longitude from Destination order by rateNum desc"
->>>>>>> master
         );
       res.send(fetchDestinations.recordset);
     }
@@ -92,7 +84,6 @@ router.post("/trip/add", auth, async (req, res) => {
     console.log(err);
   }
 });
-<<<<<<< HEAD
 //An
 router.get("/getDestinationCount",auth,async(req,res)=>{
   try{
@@ -181,7 +172,6 @@ router.post("/add",auth,async(req,res)=>{
     console.log(err);
   } 
 })
-=======
 router.get("/weather", auth, async (req, res) => {
   try {
     axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
@@ -196,5 +186,4 @@ router.get("/weather", auth, async (req, res) => {
     console.log(err);
   }
 });
->>>>>>> master
 module.exports = router;
