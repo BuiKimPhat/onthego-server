@@ -181,7 +181,7 @@ router.post("/deleteUser/:id",auth,async(req,res)=>{
           if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
           else throw new Error ("Không thể xóa người dùng!");
         }
-    };
+    }
   }catch(err){
     res.status(400).send({ error: err });
     console.log(err);

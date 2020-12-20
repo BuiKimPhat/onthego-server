@@ -99,4 +99,19 @@ router.get("/getDestinationCount",auth,async(req,res)=>{
   }
 })
 
+router.get("/list", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let fetchDestinations = await pool
+        .request()
+        .query(
+          "select id, [name], address, description, category, rating,rateNum from Destination order by rating desc"
+        );
+      res.send(fetchDestinations.recordset);    
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  }
+});
+
 module.exports = router;
