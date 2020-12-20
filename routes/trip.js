@@ -9,7 +9,7 @@ router.get("/", auth, async (req, res) => {
       .request()
       .input("UID", sql.Int, req.uid)
       .query(
-        "select Trip.id, Trip.[name], [User].[name] as [owner], cUser.createdAt from Trip join (select tripId, createdAt from User_Trip where userId = @UID) as cUser on Trip.id = cUser.tripId join [User] on Trip.ownerId = [User].id order by cUser.createdAt desc"
+        "select Trip.id, Trip.[name], [User].[name] as [owner], cUser.createdAt from Trip join (select tripId, createdAt from User_Trip where userId = @UID) as cUser on Trip.id = cUser.tripId left join [User] on Trip.ownerId = [User].id order by cUser.createdAt desc"
       );
     res.send(userTrips.recordset);
   } catch (err) {
