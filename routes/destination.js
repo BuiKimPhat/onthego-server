@@ -130,4 +130,45 @@ router.get("/getDes/:id",auth,async(req,res)=>{
   }
 });
 
+router.post("/edit", auth, async (req, res)=>{
+  try{
+    let pool = await sql.connect();
+    let updateDes = await pool
+    .request()
+    .input("desID", sql.Int, req.body.id)
+    .input("name", sql.NVarChar(200), req.body.name)
+    .input("address", sql.NVarChar(200), req.body.address)
+    .input("cat", sql.NVarChar(200), req.body.cat)
+    .input("description", sql.NVarChar(500), req.body.description)
+    .input("latitude", sql.Float, req.body.latitude)
+    .input("longitude", sql.Float, req.body.longitude)
+    .query("update Trip set [name] = @name, [address]= @address , [description]= @description, category=@cat, latitude= @latitude , longitude=@longitude  where id = @desID");
+    if(updateDes.rowsAffected[0]>0) res.send({ message: "Update diểm đến thành công thành công"});
+    else res.send({ message: "Update diểm đến không thành công thành công"});
+  }catch(err){
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  }
+})
+
+router.post("/add",auth,async(req,res)=>{
+   try{
+    let pool = await sql.connect();
+    let add = await pool
+    .request()
+    .input("desID", sql.Int, req.body.id)
+    .input("name", sql.NVarChar(200), req.body.name)
+    .input("address", sql.NVarChar(200), req.body.address)
+    .input("cat", sql.NVarChar(200), req.body.cat)
+    .input("description", sql.NVarChar(500), req.body.description)
+    .input("latitude", sql.Float, req.body.latitude)
+    .input("longitude", sql.Float, req.body.longitude)
+    .query("insert into Trip ( [name] , [address] , [description], category, latitude , longitude) value (@name,@address,@description,@cat,@latitude,@longitude)");
+    if(add.rowsAffected[0]>0) res.send({ message: "Thêm diểm đến thành công thành công"});
+    else res.send({ message: "Thêm diểm đến không thành công thành công"});
+   }catch(err){
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  } 
+})
 module.exports = router;

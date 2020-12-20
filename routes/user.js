@@ -156,21 +156,10 @@ router.post("/deleteUser/:id",auth,async(req,res)=>{
     .request()
     .input("id",sql.Int,req.params.id)
     .query(
-      "select tripId from UserTrip where userId= @id"
+      "delete from UserTrip where userId= @id"
     );
     if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng!");
     else {
-      await pool
-         .request()
-         .input("tripID", sql.Int, req.body.tripId)
-         .query("delete from Trip_Destination where tripId = @tripID");
-         let deleteTrip = await pool
-            .request()
-            .input("id",sql.Int,req.params.id)
-            .input("tripID", sql.Int, req.body.tripId)
-            .query("delete from Trip where id = @tripID and ownerId = @id");
-        if(deleteTrip.rowsAffected[0]<0) throw new Error ("Không thể xóa người dùng!");
-        else{
           await pool
           .request()
           .query("delete from User_Token where userId = @id");
@@ -180,7 +169,6 @@ router.post("/deleteUser/:id",auth,async(req,res)=>{
             .query("delete from [User] where id =@id");
           if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
           else throw new Error ("Không thể xóa người dùng!");
-        }
     }
   }catch(err){
     res.status(400).send({ error: err });
