@@ -105,7 +105,7 @@ router.get("/list", auth, async (req, res) => {
     let fetchDestinations = await pool
         .request()
         .query(
-          "select id, [name], address, description, category, rating,rateNum from Destination order by rating desc"
+          "select id, [name], address, description, category, rating,rateNum from Destination order by id asc"
         );
       res.send(fetchDestinations.recordset);    
   } catch (err) {
