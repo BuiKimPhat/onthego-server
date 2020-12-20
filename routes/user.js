@@ -36,8 +36,7 @@ router.post("/login", async (req, res) => {
             );
           res.send({ ...userInfo.recordset[0], token });
         } else throw new Error("Không thể tạo mới người dùng");
-      } else
-        res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
+      } else res.status(401).send({ error: "Tài khoản hoặc mật khẩu không đúng!" });
     }
   } catch (err) {
     res.status(400).send({ error: err.message });
