@@ -7,3 +7,6 @@ npm install
 ```
 nodemon server.js
 ```
+
+### Android App
+https://github.com/BuiKimPhat/onthego/
