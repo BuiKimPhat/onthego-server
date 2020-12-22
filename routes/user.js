@@ -54,8 +54,6 @@ router.post("/signup", async (req, res) => {
       .request()
       .input("email", sql.VarChar, req.body.email)
       .query("select id from [User] where email = @email");
-    // console.log(mailCheck);
-
     if (mailCheck.recordset.length == 0) {
       let hashedPwd = await bcrypt.hash(req.body.password, 10);
       let insert = await pool
@@ -72,12 +70,10 @@ router.post("/signup", async (req, res) => {
         .query(
           "insert into [User] (email,[password],[name], createdAt, isAdmin, birthday, address) values (@email, @password, @name, CURRENT_TIMESTAMP, 0, @birthday, @address)"
         );
-      //   console.log(insert);
       if (insert.rowsAffected[0] > 0) {
         let getUserID = await pool
           .request()
           .query("select id from [User] where id = IDENT_CURRENT('User')");
-        // console.log(getUserID);
         let token = genToken(getUserID.recordset[0].id);
         let insertToken = await pool
           .request()
@@ -93,7 +89,6 @@ router.post("/signup", async (req, res) => {
       res.status(403).send({ error: "Email đã tồn tại" });
     }
   } catch (err) {
-    // ... error checks
     res.status(400).send({ error: err.message });
     console.log(err);
   }
