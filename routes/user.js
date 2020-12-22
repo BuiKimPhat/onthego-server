@@ -177,8 +177,6 @@ router.post("/edit/pwd", auth, async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // An , lấy số lượng user
 router.get("/admin_User",auth,async(req,res)=>{
   try{
@@ -254,5 +252,6 @@ router.get("/getUserCount",auth,async(req,res)=>{
     console.log(err);
   }
 });
+
 module.exports = router;
 
