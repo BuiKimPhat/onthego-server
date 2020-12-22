@@ -178,3 +178,81 @@ router.post("/edit/pwd", auth, async (req, res) => {
 });
 
 module.exports = router;
+
+// An , lấy số lượng user
+router.get("/admin_User",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let listUser = await pool
+      .request()
+      .input("UID",sql.Int,req.uid)
+      .query(
+        "select id ,name, email from [User]"
+      );
+    res.send(listUser.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+//An , lấy thông tin user trừ password 
+router.get("/getUserInfor/:id",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let user = await pool
+      .request()
+      .input("id",sql.Int,req.params.id)
+      .query(
+        "select name , email , isAdmin , birthday , address from [User] where id = @id" 
+      );
+    res.send(user.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+
+
+// An , xóa user 
+router.post("/deleteUser/:id",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let result = await pool
+    .request()
+    .input("id",sql.Int,req.params.id)
+    .query(
+      "delete from UserTrip where userId= @id"
+    );
+    if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng!");
+    else {
+          await pool
+          .request()
+          .query("delete from User_Token where userId = @id");
+          let deleteUser = await pool
+            .request()
+            .input("id",sql.Int,req.params.id)
+            .query("delete from [User] where id =@id");
+          if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
+          else throw new Error ("Không thể xóa người dùng!");
+    }
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+router.get("/getUserCount",auth,async(req,res)=>{
+  try{
+    let pool = await sql.connect();
+    let count = await pool
+    .request()
+    .query(
+      "select COUNT (*) as numOfUsers from [User];"
+    );
+    res.send(count.recordset);
+  }catch(err){
+    res.status(400).send({ error: err });
+    console.log(err);
+  }
+});
+module.exports = router;
+
