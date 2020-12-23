@@ -1,3 +1,4 @@
+
 const axios = require("axios");
 const sql = require("mssql");
 const router = require("express").Router();
@@ -84,6 +85,21 @@ router.post("/trip/add", auth, async (req, res) => {
     console.log(err);
   }
 });
+router.get("/weather", auth, async (req, res) => {
+  try {
+    axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
+    .then(apiRes => {
+      res.send({temp: apiRes.data.main.temp, description: apiRes.data.weather[0].description, icon: apiRes.data.weather[0].icon});
+    })
+    .catch(error => {
+      throw error;
+    });
+  } catch (err){
+    res.status(400).send({error: err.message});
+    console.log(err);
+  }
+});
+
 //An
 router.get("/getDestinationCount",auth,async(req,res)=>{
   try{
@@ -172,18 +188,6 @@ router.post("/add",auth,async(req,res)=>{
     console.log(err);
   } 
 })
-router.get("/weather", auth, async (req, res) => {
-  try {
-    axios.get(`http://api.openweathermap.org/data/2.5/weather?lat=${req.query.lat}&lon=${req.query.lon}&appid=1c022451d102533da0d4e741102da575&units=metric&lang=vi`)
-    .then(apiRes => {
-      res.send({temp: apiRes.data.main.temp, description: apiRes.data.weather[0].description, icon: apiRes.data.weather[0].icon});
-    })
-    .catch(error => {
-      throw error;
-    });
-  } catch (err){
-    res.status(400).send({error: err.message});
-    console.log(err);
-  }
-});
+
 module.exports = router;
+
