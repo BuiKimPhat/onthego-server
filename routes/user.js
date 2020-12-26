@@ -143,33 +143,6 @@ router.get("/getUserInfor/:id",auth,async(req,res)=>{
     console.log(err);
   }
 });
-// An , xóa user 
-router.post("/deleteUser/:id",auth,async(req,res)=>{
-  try{
-    let pool = await sql.connect();
-    let result = await pool
-    .request()
-    .input("id",sql.Int,req.params.id)
-    .query(
-      "delete from UserTrip where userId= @id"
-    );
-    if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng!");
-    else {
-          await pool
-          .request()
-          .query("delete from User_Token where userId = @id");
-          let deleteUser = await pool
-            .request()
-            .input("id",sql.Int,req.params.id)
-            .query("delete from [User] where id =@id");
-          if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
-          else throw new Error ("Không thể xóa người dùng!");
-    }
-  }catch(err){
-    res.status(400).send({ error: err });
-    console.log(err);
-  }
-});
 router.get("/getUserCount",auth,async(req,res)=>{
   try{
     let pool = await sql.connect();
@@ -219,29 +192,33 @@ router.get("/getUserInfor/:id",auth,async(req,res)=>{
 
 
 // An , xóa user 
-router.post("/deleteUser/:id",auth,async(req,res)=>{
+router.get("/deleteUser/:id",auth,async(req,res)=>{
   try{
     let pool = await sql.connect();
     let result = await pool
     .request()
     .input("id",sql.Int,req.params.id)
     .query(
-      "delete from UserTrip where userId= @id"
+      "delete from User_Trip where userId = @id"
     );
-    if(result.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng!");
+    if(result.rowsAffected[0]>0) throw new Error("Không thể xóa người dùng");
     else {
-          await pool
+         let deleteToken = await pool
           .request()
+          .input("id",sql.Int,req.params.id)
           .query("delete from User_Token where userId = @id");
+          if(deleteToken.rowsAffected[0]<=0) throw new Error("Không thể xóa người dùng");
+          else {
           let deleteUser = await pool
             .request()
             .input("id",sql.Int,req.params.id)
-            .query("delete from [User] where id =@id");
+            .query("delete from [User] where id = @id");
           if(deleteUser.rowsAffected[0]>0) res.send({message : "Xóa người dùng thành công"});
-          else throw new Error ("Không thể xóa người dùng!");
+          else throw new Error ("Không thể xóa người dùng");
+          }
     }
   }catch(err){
-    res.status(400).send({ error: err });
+    res.status(400).send({ error: err.message });
     console.log(err);
   }
 });
@@ -259,6 +236,29 @@ router.get("/getUserCount",auth,async(req,res)=>{
     console.log(err);
   }
 });
+
+router.post("/edit2",auth,async(req,res)=>{
+  try{
+   let pool = await sql.connect();
+   let add = await pool
+   .request()
+   .input("id",sql.Int,req.body.id)
+   .input("email", sql.VarChar, req.body.email)
+   .input("name", sql.NVarChar, req.body.name)
+   .input(
+    "birthday",
+    sql.Date,
+    req.body.birthday != null ? new Date(req.body.birthday) : null
+  )
+   .input("address", sql.NVarChar, req.body.address)
+   .query("update [User] set email = @email,name =  @name , birthday = @birthday, address = @address where id = @id");
+   if(add.rowsAffected[0]>0) res.send({ message: "Thay đổi thông tin người dùng thành công thành công"});
+   else res.send({ message: "Thay đổi thông tin người dùng không thành công thành công"});
+  }catch(err){
+   res.status(400).send({ error: err.message });
+   console.log(err);
+ } 
+})
 
 module.exports = router;
 
