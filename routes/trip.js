@@ -263,5 +263,100 @@ router.get("/getListTrip",auth,async(req,res)=>{
     console.log(err);
   }
 })
+router.post("/edit2", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    // check if user is owner
+    let checkEditRight = await pool
+      .request()
+      .input("UID", sql.Int, req.body.uid)
+      .input("tripID", sql.Int, req.body.id)
+      .query("select id from Trip where id = @tripID and ownerId = @UID");
+    if (checkEditRight.rowsAffected[0] <= 0)
+      res
+        .status(403)
+        .send({ error: "Bạn không có quyền chỉnh sửa chuyến đi này" });
+    else {
+      // update name
+      let updateName = await pool
+        .request()
+        .input("tripID", sql.Int, req.body.id)
+        .input("name", sql.NVarChar(100), req.body.name)
+        .query("update Trip set [name] = @name where id = @tripID");
+      if (updateName.rowsAffected[0] > 0) {
+        // delete all trip destinations
+        await pool
+          .request()
+          .input("tripID", sql.Int, req.body.id)
+          .query("delete from Trip_Destination where tripId = @tripID");
+        if (req.body.destinations) {
+          for (var i = 0; i < req.body.destinations.length; i++) {
+            // insert new trip destinations
+            let newTripDestinations = await pool
+              .request()
+              .input("tripID", sql.Int, req.body.id)
+              .input("destinationID", sql.Int, req.body.destinations[i].id)
+              .input(
+                "startTime",
+                sql.DateTimeOffset,
+                req.body.destinations[i].startTime != null
+                  ? new Date(req.body.destinations[i].startTime)
+                  : null
+              )
+              .input(
+                "finishTime",
+                sql.DateTimeOffset,
+                req.body.destinations[i].finishTime != null
+                  ? new Date(req.body.destinations[i].finishTime)
+                  : null
+              )
+              .query(
+                "insert into Trip_Destination(tripId, destinationId, startTime, finishTime) values (@tripID, @destinationID, @startTime, @finishTime)"
+              );
+            if (newTripDestinations.rowsAffected[0] <= 0)
+              throw new Error(
+                "Không thể thêm điểm đến " + req.body.destinations[i].id
+              );
+          }
+        }
+        res.send({ message: "Chỉnh sửa chuyến đi thành công" });
+      } else throw new Error("Không thể chỉnh sửa tên chuyến đi");
+    }
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  }
+});
+
+router.post("/delete2", auth, async (req, res) => {
+  try {
+    let pool = await sql.connect();
+    let fromList = await pool
+      .request()
+      .input("UID", sql.Int, req.body.uid)
+      .input("tripID", sql.Int, req.body.tripId)
+      .query("delete from User_Trip where tripId = @tripID");
+    if (fromList.rowsAffected[0] < -1)
+      throw new Error("Không thể xóa chuyến đi khỏi danh sách");
+    else {
+      let deleteDes = await pool
+        .request()
+        .input("tripID", sql.Int, req.body.tripId)
+        .query("delete from Trip_Destination where tripId = @tripId");
+      if (deleteDes.rowsAffected[0]>=0) {
+          let deleteTrip = await pool
+          .request()
+          .input("tripID", sql.Int, req.body.tripId)
+          .query("delete from Trip where id = @tripId");
+        if (deleteTrip.rowsAffected[0] > 0)
+           res.send({ message: "Xóa chuyến đi thành công!" });
+        else res.send({ message: "Xóa chuyến đi không thành công!" });
+        }
+      }
+  } catch (err) {
+    res.status(400).send({ error: err.message });
+    console.log(err);
+  }
+});
 
 module.exports = router;
